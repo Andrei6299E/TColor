@@ -7,10 +7,24 @@ var ctx = canvas.getContext("2d");
 var topColor = [];
 var clr = document.getElementById('clr');
 var idList = ['clr-one', 'clr-two', 'clr-three', 'clr-four', 'clr-five'] // all id cart
+var idNumber = -1
+var ds = new Date() 
+number = localStorage.getItem('number')?localStorage.getItem('number'):5
 
 document.getElementById('btn-start').onclick = function(){
 	//takeImage()
 	menageImage(5)
+}
+
+
+// Click to color and clickToCopy()
+clr.onclick = function(e){
+	var className = e.path[1].className;
+	if (className === 'rgb') {
+		clickToCopy('rgb')
+	} else if (className === 'hex') {
+		clickToCopy('hex')
+	}
 }
 
 clr.onmouseover = function(e) {
@@ -19,11 +33,16 @@ clr.onmouseover = function(e) {
 		zoomColorCart(idThisCart)
 	}
 }
+
+document.getElementById('btn-setting').onclick = function(){
+	placeRight()
+	settingShow()
+}
+
 lStorage('get')
   /////////////
   // Initial //
   /////////////
-console.log('start ... OK!')
 /*
 imgS.onload = function() {
 	console.log('loading image ... OK!')
@@ -186,29 +205,30 @@ function drawAllRect(colorArr,n) {
 	//////////////////////////////////
 function zoomColorCart(id){
 	var elemA = 5, elemB = 5; // eleent zoomx0.5, left, right.
-	var idNumber = -1;
 	for (var i = 0; i < idList.length; i++) { // number id in idList
-		if (idList[i] === id) idNumber = i
-	}
-	if (idNumber < 0) return true
-	var elem = document.getElementById(id) // hiver Cart is DOM
-	if (idNumber !== 0) elemB = document.getElementById(idList[idNumber-1]) //  Left of hover cart
-	if (idNumber !== 4) elemA = document.getElementById(idList[idNumber+1]) //  Right of hover cart
+		if (idList[i] === id) {
+			idNumber = i
+			var elem = document.getElementById(id) // hiver Cart is DOM
+			if (idNumber !== 0) elemB = document.getElementById(idList[idNumber-1]) //  Left of hover cart
+			if (idNumber !== 4) elemA = document.getElementById(idList[idNumber+1]) //  Right of hover cart
 
-	// resize elements
-	elem.style.width = '78px'; // widthx2
-	if (idNumber !== 0) elemB.style.width = '33px'; // Left element widthx0.5
-	if (idNumber !== 0) clr.style.left = '25px'     // Left size is not element number 0 
-	if (idNumber === 0) clr.style.left = '10px'     // Hover element number 0, left ul is 10px moving
-	if (idNumber !== 4) elemA.style.width = '33px'; // right element widthx0.5
-	// All elment width normal, not hover
-	for (var i = 0; i < idList.length; i++) {  
-		var eN = document.getElementById(idList[i])
-		if (eN === elem) continue
-		if (eN === elemA || eN === elemB) continue
-		eN.style.width = '48px';
-	}
-	rbgHex(elem)
+			// resize elements
+			elem.style.width = '78px'; // widthx2
+			if (idNumber !== 0) elemB.style.width = '33px'; // Left element widthx0.5
+			if (idNumber !== 0) clr.style.left = '25px'     // Left size is not element number 0 
+			if (idNumber === 0) clr.style.left = '10px'     // Hover element number 0, left ul is 10px moving
+			if (idNumber !== 4) elemA.style.width = '33px'; // right element widthx0.5
+			// All elment width normal, not hover
+			for (var i = 0; i < idList.length; i++) {  
+				var eN = document.getElementById(idList[i])
+				if (eN === elem) continue
+				if (eN === elemA || eN === elemB) continue
+				eN.style.width = '48px';
+			}
+			rbgHex(elem)
+
+		}
+	}			
 }
 
 	////////////////////////////////////////////////////////////
@@ -243,28 +263,118 @@ function rbgHex(dom) {
 	dom.getElementsByClassName('hex')['0'].getElementsByClassName('clr-hex-value')[0].innerHTML = rgbToHex(color.slice(4,-1));
 }
 
-	//
-	// Local storage Function
-	//
+	//////////////////////////////
+	//  Local storage Function  //
+	//////////////////////////////
 function lStorage(action, arrClr) {
+	function arrToString(arr) {
+		var s = '';
+		for (var i = 0; i < arr.length; i++) {
+			s += arr[i]+';'
+		}
+		return s
+	}
+	function stringToArray(str) {
+		var a = [];
+		str = str.split(';')
+		for (var i = 0; i < str.length; i++) {
+			if (!str[i]) return a
+			a.push(str[i].split(','))
+		}
+		return a
+	}
+
 	chrome.tabs.query({currentWindow: true, active: true}, function(tabs){
     	tabUrl = tabs[0].url;
-    	var arrNames = localStorage.getItem('names').split(','); // arr [name1, name2,...]
+    	if (action === 'get' && localStorage.getItem(tabUrl) && ds.getTime() - localStorage.getItem(tabUrl+'time') < 60000) {
+    		var timeago = (ds.getTime() - localStorage.getItem(tabUrl+'time')) / 1000
+    		document.getElementById('time').innerHTML = 'Load result ' + timeago.toFixed(1) + ' seconds ago.'
+	        drawCart(stringToArray(localStorage.getItem(tabUrl)).slice(0,number));                 // Gracia!!! Return array the city color in array Local
+	    }
+
+    	if (localStorage.getItem('names')) {
+			var arrNames = localStorage.getItem('names').split(','); // arr [name1, name2,...]
+	    } else {
+	    	var arrNames = []
+	    }
 	    var objNames = {};                                       // obj names = [color1, color2,...]
 	    for (var i = 0; i < arrNames.length; i++) {
-	        objNames[arrNames[i]] = localStorage.getItem(arrNames[i]).split(',');
+	    	var t = arrNames[i]
+	    	if (localStorage.getItem(arrNames[i])) {
+	    		var z = localStorage.getItem(arrNames[i]).split(',');
+	    	} else {
+	    		var z = [',,']
+	    	}
+	        objNames.t = z
 	    }
-	    if (action === 'get' && tabUrl in arrNames) {          // set
-	        return objNames[tabUrl];                           // Gracia!!! Return array the city color in array Local
-	    } else if (action === 'set') {                           // get
-	        if (arrNames.length >= 20) {                         // full memory? >20
-	            localStorage.removeItem(arrNames[0]);
-	            arrNames = arrNames.shift();
+	    if (action === 'set') {                           		 // get
+	    	arrClr = arrToString(arrClr)
+	    	if (!arrNames.length) saveSiteInLocalStorage() // ZERO
+			for (var i = 0, s = 1; i < arrNames.length; i++) {
+				if (tabUrl === arrNames[i]) s--
+			}
+			if (s) saveSiteInLocalStorage()
+			function saveSiteInLocalStorage() {
+	        	if (arrNames.length >= 20) {                         // full memory? >20
+		            localStorage.removeItem(arrNames[0]);
+		            localStorage.removeItem(arrNames[0]+'time');
+		            arrNames.shift();
+		        }
+		        arrNames.push(tabUrl);
 	        }
-	        arrNames.push(tabUrl);
-	        localStorage.setItem('names') = arrNames;
-	        localStorage.setItem(tabUrl) = arrClr;
+	        localStorage.setItem('names', arrNames)
+	        localStorage.setItem(tabUrl,arrClr)
+	        localStorage.setItem(tabUrl+'time',ds.getTime())
+	        document.getElementById('time').innerHTML = ''
 	        return true
-	    } 	
+	    }
 	})
+}	
+	/////////////////////////// attr : 'rgb' | 'hex' 
+	//  Click to COPY color  //
+	///////////////////////////
+
+function clickToCopy(nameColor) {
+	if (nameColor === 'rgb') {
+		var divElem = document.getElementById(idList[idNumber]).getElementsByClassName('clr-rgb-value')[0]
+		var prevElem = divElem.innerHTML
+		divElem.innerHTML = 'rgb('+divElem.innerHTML+')'
+	} else if (nameColor === 'hex') {
+		var divElem = document.getElementById(idList[idNumber]).getElementsByClassName('clr-hex-value')[0]
+		var prevElem = divElem.innerHTML
+	}
+	var range = document.createRange();  
+  	range.selectNode(divElem);  
+  	window.getSelection().addRange(range); 
+	document.execCommand('copy', true);
+	window.getSelection().removeAllRanges();
+	divElem.innerHTML = '<p style="color: grey; font-weight: blod">copy</p>'
+	setTimeout(function() {
+		divElem.innerHTML = prevElem
+	}, 500);
+};
+
+function placeRight() {
+	var pr = document.getElementById('place-right')
+	if (pr.offsetWidth === 20) {
+		pr.style.width = '300px';
+		pr.style.left = '30px';
+		pr.style.backgroundColor = '#B8B8B8';
+	} else {
+		pr.style.width = '20px';
+		pr.style.left = '310px';
+		pr.style.backgroundColor = '#DDDDDD';
+	}
 }
+
+function settingShow() {
+	var st = document.getElementById('setting');
+	if (st.style.display === 'none' || !st.style.display) {
+		st.style.display = 'block'
+	} else {
+		st.style.display = 'none'
+	}
+}
+
+placeRight()
+settingShow()

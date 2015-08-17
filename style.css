@@ -22,7 +22,10 @@ ul {
 	border-radius: 0px 0px 1px 1px;
 	color: #F0F0F0;
 }
-
+#time {
+	position: absolute;
+	top: 0px; left: 110px;
+}
 #clr {
 	position: absolute;
 	top: 45px; left: 25px;
@@ -36,7 +39,7 @@ ul {
 	background: #F0F0F0;
 	display: none;
 	width: 48px;
-	height: 118px;
+	height: 121px;
 	border: 1px solid black;
 }
 #clr p {
@@ -59,6 +62,7 @@ ul {
 	height: 170px;
 	width: 20px;
 	background: #DDDDDD;
+	box-shadow: 0px -10px 10px -10px black;
 }
 #btn-setting {
 	position: absolute;
